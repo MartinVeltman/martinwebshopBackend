@@ -20,6 +20,9 @@ public class Item {
 
     private String description;
 
+    @Column
+    private int qty;
+
     public Integer getId() {
         return id;
     }
@@ -58,5 +61,13 @@ public class Item {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getQty() {
+        return qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
     }
 }

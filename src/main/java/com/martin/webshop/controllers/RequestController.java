@@ -71,19 +71,8 @@ public class RequestController {
                 .collect(Collectors.toList());
 
 
-        return ResponseEntity.ok(new JwtResponse(jwt
-//                , userDetails.getId(),
-//                userDetails.getUsername(),
-//                userDetails.getEmail(),
-//                roles
-        ));
+        return ResponseEntity.ok(new JwtResponse(jwt));
 
-//		return ResponseEntity.ok(jwt
-//				,userDetails.getId(),
-//				userDetails.getUsername(),
-//				userDetails.getEmail(),
-//				roles
-//		));
     }
 
     @PostMapping("/user/signup")
@@ -145,6 +134,7 @@ public class RequestController {
 
     @PostMapping("/admin/createItem")
     public ResponseEntity<?> createItem(@RequestBody Item item) {
+        item.setQty(1);
         itemRepository.save(item);
         return MessageResponse.generateResponse("Item succesvol toegevoegd", HttpStatus.OK, null);
 
@@ -170,6 +160,24 @@ public class RequestController {
 
         return MessageResponse.generateResponse("Order geplaatst", HttpStatus.OK, null);
     }
+
+    @PatchMapping("/user/changePassword")
+    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword){
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("User Not Found with username: " + username));
+        user.setPassword(encoder.encode(newpassword));
+        userRepository.save(user);
+        return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
+    }
+
+    @GetMapping("/user/getOrderValue")
+    public Object getOrderValue(@RequestParam String username){
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("User Not Found with username: " + username));
+        Float moneyspend = user.getMoneySpend();
+        return moneyspend;
+    }
+
 
 
 
