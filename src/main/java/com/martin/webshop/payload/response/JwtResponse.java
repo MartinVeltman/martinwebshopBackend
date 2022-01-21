@@ -3,21 +3,19 @@ package com.martin.webshop.payload.response;
 import java.util.List;
 
 public class JwtResponse {
-	private String token;
+    private String token;
 
+    public JwtResponse(String accesToken) {
+        this.token = accesToken;
+    }
 
-	public JwtResponse(String accesToken){
-		this.token = accesToken;
-	}
+    public String getAccessToken() {
+        return token;
+    }
 
-
-	public String getAccessToken() {
-		return token;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.token = accessToken;
-	}
+    public void setAccessToken(String accessToken) {
+        this.token = accessToken;
+    }
 
 
 }

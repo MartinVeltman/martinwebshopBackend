@@ -152,7 +152,7 @@ public class RequestController {
     }
 
     @PatchMapping("/user/createOrder")
-    public ResponseEntity<?> createItem(@RequestParam String username, Float orderValue){
+    public ResponseEntity<?> createItem(@RequestParam String username, Float orderValue) {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new UsernameNotFoundException("User Not Found with username: " + username));
         user.setMoneySpend(user.getMoneySpend() + orderValue);
@@ -162,7 +162,7 @@ public class RequestController {
     }
 
     @PatchMapping("/user/changePassword")
-    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword){
+    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword) {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new UsernameNotFoundException("User Not Found with username: " + username));
         user.setPassword(encoder.encode(newpassword));
@@ -171,15 +171,12 @@ public class RequestController {
     }
 
     @GetMapping("/user/getOrderValue")
-    public Object getOrderValue(@RequestParam String username){
+    public Object getOrderValue(@RequestParam String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new UsernameNotFoundException("User Not Found with username: " + username));
         Float moneyspend = user.getMoneySpend();
         return moneyspend;
     }
-
-
-
 
 
 }
