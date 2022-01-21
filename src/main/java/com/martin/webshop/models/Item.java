@@ -4,7 +4,10 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 
 @Entity
-@Table(name = "items")
+@Table(name = "items",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "name")
+        })
 public class Item {
 
     @Id
