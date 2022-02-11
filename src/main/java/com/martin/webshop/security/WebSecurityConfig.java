@@ -61,6 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests().antMatchers("/api/v1/user/**").permitAll()
+                .antMatchers("/api/v1/getItems").permitAll()
                 .antMatchers("/api/test/**").permitAll()
                 .antMatchers(POST, "/api/v1/admin/createItem").hasAnyAuthority(ROLE_ADMIN)
                 .anyRequest().authenticated();

@@ -2,20 +2,21 @@ package com.martin.webshop.controllers;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import com.martin.webshop.models.ERole;
-import com.martin.webshop.models.Item;
 import com.martin.webshop.models.Role;
 import com.martin.webshop.models.User;
 import com.martin.webshop.payload.response.JwtResponse;
-import com.martin.webshop.repository.ItemRepository;
 import com.martin.webshop.repository.RoleRepository;
 import com.martin.webshop.repository.UserRepository;
+import com.martin.webshop.security.jwt.AuthTokenFilter;
+import com.martin.webshop.security.services.UserDetailsServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.bind.annotation.*;
 
 import com.martin.webshop.payload.request.LoginRequest;
@@ -36,15 +39,12 @@ import com.martin.webshop.security.services.UserDetailsImpl;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1")
-public class RequestController {
+public class UserController {
     @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
     UserRepository userRepository;
-
-    @Autowired
-    ItemRepository itemRepository;
 
     @Autowired
     RoleRepository roleRepository;
@@ -54,6 +54,14 @@ public class RequestController {
 
     @Autowired
     JwtUtils jwtUtils;
+
+    @Autowired
+    AuthTokenFilter authTokenFilter;
+
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     @PostMapping("/user/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -132,23 +140,13 @@ public class RequestController {
         return MessageResponse.generateResponse("Account succesvol aangemaakt", HttpStatus.OK, null);
     }
 
-    @PostMapping("/admin/createItem")
-    public ResponseEntity<?> createItem(@RequestBody Item item) {
-        item.setQty(1);
-        itemRepository.save(item);
-        return MessageResponse.generateResponse("Item succesvol toegevoegd", HttpStatus.OK, null);
-
-    }
-
-    @GetMapping("/user/getItems")
-    @ResponseBody
-    public Object getUsers() {
-        try {
-            List<Item> items = this.itemRepository.findAll();
-            return items;
-        } catch (Exception e) {
-            return MessageResponse.generateResponse("An error has occurred: " + e, HttpStatus.BAD_REQUEST, null);
-        }
+    @PatchMapping("/user/changePassword")
+    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword) {
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UsernameNotFoundException("User Not Found with username: " + username));
+        user.setPassword(encoder.encode(newpassword));
+        userRepository.save(user);
+        return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
     }
 
     @PatchMapping("/user/createOrder")
@@ -161,21 +159,22 @@ public class RequestController {
         return MessageResponse.generateResponse("Order geplaatst", HttpStatus.OK, null);
     }
 
-    @PatchMapping("/user/changePassword")
-    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword) {
-        User user = userRepository.findByUsername(username).orElseThrow(() ->
-                new UsernameNotFoundException("User Not Found with username: " + username));
-        user.setPassword(encoder.encode(newpassword));
-        userRepository.save(user);
-        return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
-    }
-
     @GetMapping("/user/getOrderValue")
-    public Object getOrderValue(@RequestParam String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() ->
-                new UsernameNotFoundException("User Not Found with username: " + username));
-        Float moneyspend = user.getMoneySpend();
-        return moneyspend;
+    public Object getOrderValue(HttpServletRequest request) {
+        try {
+            String jwt = authTokenFilter.parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                User user = userRepository.findByUsername(username).orElseThrow(() ->
+                        new UsernameNotFoundException("User Not Found with username: " + username));
+                Float moneyspend = user.getMoneySpend();
+                return moneyspend;
+            }
+        } catch (Exception e) {
+            logger.error("Geen gebruikersnaam gevonden", e);
+        }
+        return MessageResponse.generateResponse("Er is iets fout gegaan", HttpStatus.BAD_REQUEST, null);
+
     }
 
 
