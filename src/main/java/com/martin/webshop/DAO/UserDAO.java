@@ -1,6 +1,5 @@
 package com.martin.webshop.DAO;
 
-import com.martin.webshop.models.ERole;
 import com.martin.webshop.models.User;
 import com.martin.webshop.payload.request.SignupRequest;
 import com.martin.webshop.repository.UserRepository;

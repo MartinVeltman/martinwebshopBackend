@@ -28,7 +28,7 @@ public class ProductController {
 
     @GetMapping("/getItems")
     @ResponseBody
-    public Object getUsers() {
+    public Object getItems() {
         try {
             List<Item> items = this.itemRepository.findAll();
             return items;

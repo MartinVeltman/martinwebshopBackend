@@ -39,8 +39,7 @@ public class UserService {
     }
 
     public Float getMoneySpend(User user) {
-        Float moneyspend = user.getMoneySpend();
-        return moneyspend;
+        return user.getMoneySpend();
     }
 
     public Boolean usernameAlreadyExists(SignupRequest signUpRequest) {
