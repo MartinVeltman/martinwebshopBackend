@@ -97,7 +97,7 @@ public class UserController {
                     .body(MessageResponse.generateResponse("Error: Username is already taken!",
                             HttpStatus.BAD_REQUEST, null));
         }
-        //checkt op user
+        //checkt op user of die al bestaat
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
@@ -141,19 +141,17 @@ public class UserController {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        userService.saveUser(user);
         return MessageResponse.generateResponse("Account succesvol aangemaakt", HttpStatus.OK, null);
     }
 
     @PatchMapping("/user/changePassword")
     public ResponseEntity<?> changePassword(HttpServletRequest request, @RequestBodyParam String newPassword) {
-        System.out.println(newPassword);
         try {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 User user = userService.getUserByToken(jwt);
-                user.setPassword(encoder.encode(newPassword));
-                userRepository.save(user);
+                userService.changePassword(user, newPassword);
                 return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
             }
         } catch (Exception e) {
@@ -169,8 +167,7 @@ public class UserController {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 User user = userService.getUserByToken(jwt);
-                user.setMoneySpend(user.getMoneySpend() + Float.parseFloat(orderValue));
-                userRepository.save(user);
+                userService.createOrder(user, orderValue);
                 return MessageResponse.generateResponse("Order aangemaakt", HttpStatus.OK, null);
             }
         } catch (Exception e) {
@@ -186,13 +183,13 @@ public class UserController {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 User user = userService.getUserByToken(jwt);
-                Float moneyspend = user.getMoneySpend();
-                return moneyspend;
+                return userService.getMoneySpend(user);
             }
         } catch (Exception e) {
             logger.error("Geen gebruikersnaam gevonden", e);
         }
-        return MessageResponse.generateResponse("Er is iets fout gegaan bij het opvragen van je ordervalue", HttpStatus.BAD_REQUEST, null);
+        return MessageResponse.generateResponse("Er is iets fout gegaan bij het opvragen van je ordervalue",
+                HttpStatus.BAD_REQUEST, null);
 
     }
 

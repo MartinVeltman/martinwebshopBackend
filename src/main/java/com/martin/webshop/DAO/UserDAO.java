@@ -25,4 +25,8 @@ public class UserDAO {
                 new UsernameNotFoundException("User Not Found with username: " + username));
         return user;
     }
+
+    public void saveUser(User user){
+        userRepository.save(user);
+    }
 }
