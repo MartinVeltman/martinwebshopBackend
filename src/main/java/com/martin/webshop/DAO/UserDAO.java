@@ -1,6 +1,8 @@
 package com.martin.webshop.DAO;
 
+import com.martin.webshop.models.ERole;
 import com.martin.webshop.models.User;
+import com.martin.webshop.payload.request.SignupRequest;
 import com.martin.webshop.repository.UserRepository;
 import com.martin.webshop.security.jwt.AuthTokenFilter;
 import com.martin.webshop.security.jwt.JwtUtils;
@@ -28,5 +30,19 @@ public class UserDAO {
 
     public void saveUser(User user){
         userRepository.save(user);
+    }
+
+    public Boolean usernameAlreadyExists(SignupRequest signUpRequest){
+        if(userRepository.existsByUsername(signUpRequest.getUsername())){
+           return true;
+        }
+        return false;
+    }
+
+    public Boolean emailAlreadyExists(SignupRequest signUpRequest){
+        if(userRepository.existsByEmail(signUpRequest.getEmail())){
+            return true;
+        }
+        return false;
     }
 }

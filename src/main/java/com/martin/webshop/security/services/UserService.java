@@ -2,6 +2,7 @@ package com.martin.webshop.security.services;
 
 import com.martin.webshop.DAO.UserDAO;
 import com.martin.webshop.models.User;
+import com.martin.webshop.payload.request.SignupRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,14 @@ public class UserService {
     public Float getMoneySpend(User user) {
         Float moneyspend = user.getMoneySpend();
         return moneyspend;
+    }
+
+    public Boolean usernameAlreadyExists(SignupRequest signUpRequest) {
+        return userDAO.usernameAlreadyExists(signUpRequest);
+    }
+
+    public Boolean emailAlreadyExists(SignupRequest signUpRequest) {
+        return userDAO.emailAlreadyExists(signUpRequest);
     }
 
 }

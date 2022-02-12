@@ -69,82 +69,6 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
-    @PostMapping("/user/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-
-        return ResponseEntity.ok(new JwtResponse(jwt));
-
-    }
-
-    @PostMapping("/user/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(MessageResponse.generateResponse("Error: Username is already taken!",
-                            HttpStatus.BAD_REQUEST, null));
-        }
-        //checkt op user of die al bestaat
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(MessageResponse.generateResponse("Error: Email is already in use!",
-                            HttpStatus.BAD_REQUEST, null));
-        }
-
-        // Creeert nieuwe user
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
-
-        Set<String> strRoles = signUpRequest.getRole();
-        Set<Role> roles = new HashSet<>();
-        user.setMoneySpend(0);
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
-        } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
-
-                        break;
-                    case "mod":
-                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(modRole);
-
-                        break;
-                    default:
-                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
-                }
-            });
-        }
-
-        user.setRoles(roles);
-        userService.saveUser(user);
-        return MessageResponse.generateResponse("Account succesvol aangemaakt", HttpStatus.OK, null);
-    }
-
     @PatchMapping("/user/changePassword")
     public ResponseEntity<?> changePassword(HttpServletRequest request, @RequestBodyParam String newPassword) {
         try {
@@ -191,6 +115,60 @@ public class UserController {
         return MessageResponse.generateResponse("Er is iets fout gegaan bij het opvragen van je ordervalue",
                 HttpStatus.BAD_REQUEST, null);
 
+    }
+
+    @PostMapping("/user/signin")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+
+        return ResponseEntity.ok(new JwtResponse(jwt));
+
+    }
+
+    @PostMapping("/user/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        if (userService.usernameAlreadyExists(signUpRequest)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(MessageResponse.generateResponse("Error: Username is already taken!",
+                            HttpStatus.BAD_REQUEST, null));
+        }
+        //checkt op user of die al bestaat
+        if (userService.emailAlreadyExists(signUpRequest)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(MessageResponse.generateResponse("Error: Email is already in use!",
+                            HttpStatus.BAD_REQUEST, null));
+        }
+
+        // Creeert nieuwe user
+        User user = new User(signUpRequest.getUsername(),
+                signUpRequest.getEmail(),
+                encoder.encode(signUpRequest.getPassword()));
+
+        Set<String> strRoles = signUpRequest.getRole();
+        Set<Role> roles = new HashSet<>();
+        user.setMoneySpend(0);
+
+        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        roles.add(userRole);
+
+        user.setRoles(roles);
+        userService.saveUser(user);
+        return MessageResponse.generateResponse("Account succesvol aangemaakt", HttpStatus.OK, null);
     }
 
 
