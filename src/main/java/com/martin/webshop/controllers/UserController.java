@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.alibaba.fastjson.JSONObject;
+import com.github.lambdaexpression.annotation.EnableRequestBodyParam;
+import com.github.lambdaexpression.annotation.RequestBodyParam;
+import com.google.api.client.json.Json;
 import com.martin.webshop.models.ERole;
 import com.martin.webshop.models.Role;
 import com.martin.webshop.models.User;
@@ -38,6 +42,7 @@ import com.martin.webshop.security.services.UserDetailsImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+@EnableRequestBodyParam
 @RequestMapping("/api/v1")
 public class UserController {
     @Autowired
@@ -136,27 +141,47 @@ public class UserController {
 
         user.setRoles(roles);
         userRepository.save(user);
-
         return MessageResponse.generateResponse("Account succesvol aangemaakt", HttpStatus.OK, null);
     }
 
     @PatchMapping("/user/changePassword")
-    public ResponseEntity<?> createItem(@RequestParam String username, String newpassword) {
-        User user = userRepository.findByUsername(username).orElseThrow(() ->
-                new UsernameNotFoundException("User Not Found with username: " + username));
-        user.setPassword(encoder.encode(newpassword));
-        userRepository.save(user);
-        return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
+    public ResponseEntity<?> changePassword(HttpServletRequest request, @RequestBodyParam String newPassword) {
+        System.out.println(newPassword);
+        try {
+            String jwt = authTokenFilter.parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                User user = userRepository.findByUsername(username).orElseThrow(() ->
+                        new UsernameNotFoundException("User Not Found with username: " + username));
+                System.out.println(newPassword);
+                user.setPassword(encoder.encode(newPassword));
+                userRepository.save(user);
+                return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
+            }
+        } catch (Exception e) {
+            logger.error("Geen gebruikersnaam gevonden", e);
+        }
+        return MessageResponse.generateResponse("Nieuw wachtwoord opslaan mislukt", HttpStatus.BAD_REQUEST, null);
+
     }
 
     @PatchMapping("/user/createOrder")
-    public ResponseEntity<?> createItem(@RequestParam String username, Float orderValue) {
-        User user = userRepository.findByUsername(username).orElseThrow(() ->
-                new UsernameNotFoundException("User Not Found with username: " + username));
-        user.setMoneySpend(user.getMoneySpend() + orderValue);
-        userRepository.save(user);
+    public ResponseEntity<?> createOrder(HttpServletRequest request, @RequestBodyParam String orderValue) {
+        try {
+            String jwt = authTokenFilter.parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                User user = userRepository.findByUsername(username).orElseThrow(() ->
+                        new UsernameNotFoundException("User Not Found with username: " + username));
+                user.setMoneySpend(user.getMoneySpend() + Float.parseFloat(orderValue));
+                userRepository.save(user);
+                return MessageResponse.generateResponse("Order aangemaakt", HttpStatus.OK, null);
+            }
+        } catch (Exception e) {
+            logger.error("Order aanmaken mislukt", e);
+        }
+        return MessageResponse.generateResponse("Order aanmaken mislukt", HttpStatus.BAD_REQUEST, null);
 
-        return MessageResponse.generateResponse("Order geplaatst", HttpStatus.OK, null);
     }
 
     @GetMapping("/user/getOrderValue")
@@ -173,7 +198,7 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Geen gebruikersnaam gevonden", e);
         }
-        return MessageResponse.generateResponse("Er is iets fout gegaan", HttpStatus.BAD_REQUEST, null);
+        return MessageResponse.generateResponse("Er is iets fout gegaan bij het opvragen van je ordervalue", HttpStatus.BAD_REQUEST, null);
 
     }
 
