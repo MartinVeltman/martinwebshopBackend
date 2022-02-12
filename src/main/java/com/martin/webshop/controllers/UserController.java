@@ -19,6 +19,7 @@ import com.martin.webshop.repository.RoleRepository;
 import com.martin.webshop.repository.UserRepository;
 import com.martin.webshop.security.jwt.AuthTokenFilter;
 import com.martin.webshop.security.services.UserDetailsServiceImpl;
+import com.martin.webshop.security.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,7 @@ public class UserController {
     AuthTokenFilter authTokenFilter;
 
     @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    UserService userService;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
@@ -150,10 +151,7 @@ public class UserController {
         try {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                User user = userRepository.findByUsername(username).orElseThrow(() ->
-                        new UsernameNotFoundException("User Not Found with username: " + username));
-                System.out.println(newPassword);
+                User user = userService.getUserByToken(jwt);
                 user.setPassword(encoder.encode(newPassword));
                 userRepository.save(user);
                 return MessageResponse.generateResponse("Nieuw wachtwoord opgeslagen", HttpStatus.OK, null);
@@ -170,9 +168,7 @@ public class UserController {
         try {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                User user = userRepository.findByUsername(username).orElseThrow(() ->
-                        new UsernameNotFoundException("User Not Found with username: " + username));
+                User user = userService.getUserByToken(jwt);
                 user.setMoneySpend(user.getMoneySpend() + Float.parseFloat(orderValue));
                 userRepository.save(user);
                 return MessageResponse.generateResponse("Order aangemaakt", HttpStatus.OK, null);
@@ -189,9 +185,7 @@ public class UserController {
         try {
             String jwt = authTokenFilter.parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                User user = userRepository.findByUsername(username).orElseThrow(() ->
-                        new UsernameNotFoundException("User Not Found with username: " + username));
+                User user = userService.getUserByToken(jwt);
                 Float moneyspend = user.getMoneySpend();
                 return moneyspend;
             }
