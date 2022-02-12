@@ -13,7 +13,7 @@ public class RoleService {
         this.roleDAO = roleDAO;
     }
 
-    public Role setUserRole(){
+    public Role setUserRole() {
         return roleDAO.setUserRole();
     }
 }
