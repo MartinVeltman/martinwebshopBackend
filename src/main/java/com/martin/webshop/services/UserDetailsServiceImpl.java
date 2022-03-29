@@ -1,4 +1,4 @@
-package com.martin.webshop.security.services;
+package com.martin.webshop.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

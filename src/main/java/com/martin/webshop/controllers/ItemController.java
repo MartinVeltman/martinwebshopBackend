@@ -2,7 +2,7 @@ package com.martin.webshop.controllers;
 
 import com.martin.webshop.models.Item;
 import com.martin.webshop.payload.response.MessageResponse;
-import com.martin.webshop.security.services.ItemService;
+import com.martin.webshop.services.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

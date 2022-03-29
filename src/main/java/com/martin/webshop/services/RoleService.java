@@ -1,4 +1,4 @@
-package com.martin.webshop.security.services;
+package com.martin.webshop.services;
 
 import com.martin.webshop.DAO.RoleDAO;
 import com.martin.webshop.models.Role;

@@ -2,7 +2,7 @@ package com.martin.webshop.security;
 
 import com.martin.webshop.security.jwt.AuthEntryPointJwt;
 import com.martin.webshop.security.jwt.AuthTokenFilter;
-import com.martin.webshop.security.services.UserDetailsServiceImpl;
+import com.martin.webshop.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
